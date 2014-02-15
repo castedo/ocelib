@@ -3,6 +3,8 @@
 
 #include <boost/assert.hpp>
 
+namespace cel {
+
 
 #if defined(BOOST_DISABLE_ASSERTS)
 # define CONFIRM(expr) (expr)
@@ -15,6 +17,16 @@
 # endif
 #endif
 
+
+// null_deleter for shared_ptr and safe_ptr to statically allocated objects
+
+struct null_deleter
+{
+  void operator()(void const *) const {}
+};
+
+
+} // namespace coost
 
 #endif
 

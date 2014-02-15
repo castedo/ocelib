@@ -10,7 +10,9 @@ Dependencies
 ------------
 
 * Typical Linux development environment (make, gcc, etc...)
-* [CMake](http://www.cmake.org) >= 2.8.1
+* C++11
+* [CMake](http://www.cmake.org) >= 2.8.1, maybe lower
+* [Boost](http://www.boost.org) >= 1.49.0, maybe lower
 * [Google Protocol Buffers](http://developers.google.com/protocol-buffers/)
 
 Quick Start

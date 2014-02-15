@@ -1,0 +1,52 @@
+package cel.ib;
+
+message ConnectApi {
+  required uint32 port = 1;
+  required int32 client_version = 2;
+  required int32 client_id = 3;
+}
+
+message ApiConnected {
+  required int32 server_version = 1;
+  required string connect_time = 2;
+  required int32 next_valid_id = 3;
+  optional string accounts = 4;
+}
+
+message Error {
+  required int32 id = 1;
+  required int32 subid = 2;
+  required string text = 3;
+}
+
+message ClientVersion {
+  required int32 version = 1;
+}
+
+message ClientId {
+  required int32 id = 1;
+}
+
+message Contract {
+  enum Type {
+    STOCK = 1;
+  }
+  required Type type = 1;
+  optional string local_symbol = 2;
+  optional string local_currency = 3;
+}
+
+enum Side {
+  BID = 0;
+  ASK = 1;
+}
+
+message Quote {
+  required Contract contract = 1;
+  optional double price = 2;
+  optional string price_currency = 3;
+  optional int32 shares = 4;
+  required Side side = 5;
+}
+
+

@@ -2,3 +2,13 @@ ocelib
 ======
 
 Open Castedo Ellerman Library (including Interactive Brokers features)
+
+This C++ code is currently used by Castedo Ellerman on Linux (mainly SUSE 11).
+Contact me if you are interested in sharing, collaborating or have feedback.
+
+Dependencies
+------------
+
+* [CMake](http://www.cmake.org) >= 2.8.1
+* [Google Protocol Buffers](http://https://developers.google.com/protocol-buffers/)
+

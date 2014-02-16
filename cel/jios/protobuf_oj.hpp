@@ -4,7 +4,7 @@
 #include <ostream>
 #include <boost/filesystem/path.hpp>
 #include <google/protobuf/message.h>
-#include <cel/jios/outj.hpp>
+#include <cel/jios/jout.hpp>
 
 namespace cel {
 

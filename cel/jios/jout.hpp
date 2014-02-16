@@ -1,5 +1,5 @@
-#ifndef CEL_OUTJ_HPP
-#define CEL_OUTJ_HPP
+#ifndef CEL_JIOS_JOUT_HPP
+#define CEL_JIOS_JOUT_HPP
 
 #include <boost/noncopyable.hpp>
 #include <boost/lexical_cast.hpp>

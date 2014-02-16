@@ -3,7 +3,7 @@
 
 #include <ostream>
 #include <spl/safe_ptr.hpp>
-#include <cel/jios/outj.hpp>
+#include <cel/jios/jout.hpp>
 
 namespace cel {
 

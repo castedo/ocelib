@@ -4,6 +4,7 @@ add_library(ocelib
     utility.cpp
     jios/json_oj.cpp
     jios/protobuf_oj.cpp
+    jios/protobuf_ij.cpp
 )
 
 target_link_libraries(ocelib

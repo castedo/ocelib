@@ -3,8 +3,24 @@ ocelib
 
 Open Castedo Ellerman Library (including Interactive Brokers features)
 
-This C++ code is currently used by Castedo Ellerman on Linux (mainly SUSE 11).
-Contact me if you are interested in sharing, collaborating or have feedback.
+This library contains C++ code that is very generic (thus open-sourced) and a
+current dependency of proprietary projects of Castedo Ellerman (mainly on SUSE
+Linux).
+
+This generic open source could migrated into separate libraries. Contact me if
+you are interested in sharing, collaborating, want more documentation or have
+feedback. 
+
+Functionality
+-------------
+
+* The code under `jios` implements abstract interfaces for reading/writing
+json-like input/output. There are concrete classes for outputting single-line or
+pretty-printed JSON text. There are also functions for
+converting, printing, parsing between Google Protocol Buffer messages and objects
+implementing these `jios` interfaces.
+* The code under `proto` has some Google Protocol Buffer headers for some
+ Interactive Brokers API protocol messages.
 
 Dependencies
 ------------

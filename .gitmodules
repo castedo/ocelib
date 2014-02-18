@@ -1,0 +1,3 @@
+[submodule "spl"]
+	path = spl
+	url = git@github.com:castedo/safe-ptr.git

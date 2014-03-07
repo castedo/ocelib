@@ -6,7 +6,7 @@
 
 using namespace std;
 using boost::filesystem::path;
-using google::protobuf::Message;
+using namespace google;
 using google::protobuf::FieldDescriptor;
 using google::protobuf::Reflection;
 using google::protobuf::Descriptor;
@@ -16,11 +16,11 @@ namespace cel {
 
 template<typename T>
 void print_field(ojnode & oj,
-                 Message const& pro,
+                 protobuf::Message const& pro,
                  FieldDescriptor const* field,
                  Reflection const* reflec,
                  T (Reflection::*get_meth)(
-                      Message const&,
+                      protobuf::Message const&,
                       FieldDescriptor const*) const
                 )
 {
@@ -30,12 +30,12 @@ void print_field(ojnode & oj,
 
 template<typename T>
 void print_field(ojnode & oj,
-                 Message const& pro,
+                 protobuf::Message const& pro,
                  FieldDescriptor const* field,
                  int index,
                  Reflection const* reflec,
                  T (Reflection::*get_meth)(
-                      Message const&,
+                      protobuf::Message const&,
                       FieldDescriptor const*,
                       int) const
                 )
@@ -45,7 +45,7 @@ void print_field(ojnode & oj,
 }
 
 void print_singular_field(ojnode & oj,
-                          Message const& pro,
+                          protobuf::Message const& pro,
                           FieldDescriptor const* field,
                           Reflection const* reflec)
 {
@@ -84,7 +84,7 @@ void print_singular_field(ojnode & oj,
 }
 
 void print_repeated_field(ojnode & oj,
-                          Message const& pro,
+                          protobuf::Message const& pro,
                           FieldDescriptor const* field,
                           int idx,
                           Reflection const* reflec)
@@ -123,7 +123,7 @@ void print_repeated_field(ojnode & oj,
   }
 }
 
-int print_count(Message const& pro,
+int print_count(protobuf::Message const& pro,
                 Descriptor const* pd,
                 Reflection const* reflec)
 {
@@ -144,7 +144,7 @@ int print_count(Message const& pro,
   return ret;
 }
 
-void print_proto_type(ojnode & oj, Message const& pro)
+void print_proto_type(ojnode & oj, protobuf::Message const& pro)
 {
   Descriptor const* pd = pro.GetDescriptor();
   Reflection const* reflec = pro.GetReflection();
@@ -174,7 +174,7 @@ void print_proto_type(ojnode & oj, Message const& pro)
   ojo.terminate();
 };
 
-void print_proto_type(ostream & os, Message const& pro)
+void print_proto_type(ostream & os, protobuf::Message const& pro)
 {
   spl::safe_ptr<ostream> p_os(&os, cel::null_deleter());
   ojarray oj = make_json_ojroot(p_os);
@@ -182,7 +182,7 @@ void print_proto_type(ostream & os, Message const& pro)
   os << endl;
 }
 
-void print_proto_type(path const& file_path, Message const& pro)
+void print_proto_type(path const& file_path, protobuf::Message const& pro)
 {
   boost::filesystem::ofstream fs(file_path);
   print_proto_type(fs, pro);

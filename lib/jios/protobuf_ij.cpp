@@ -2,7 +2,7 @@
 
 #include <cel/utility.hpp>
 
-using google::protobuf::Message;
+using namespace google;
 using google::protobuf::FieldDescriptor;
 using google::protobuf::Reflection;
 using google::protobuf::Descriptor;
@@ -12,11 +12,11 @@ namespace cel {
 
 template<typename T>
 void parse_field(ijnode & ij,
-                 Message * pro,
+                 protobuf::Message * pro,
                  FieldDescriptor const* field,
                  Reflection const* reflec,
                  void (Reflection::*set_meth)(
-                       Message *,
+                       protobuf::Message *,
                        FieldDescriptor const*,
                        T) const
                 )
@@ -33,7 +33,7 @@ void parse_field(ijnode & ij,
 }
 
 void parse_singular_field(ijnode & ij,
-                          Message * pro,
+                          protobuf::Message * pro,
                           FieldDescriptor const* field,
                           Reflection const* reflec)
 {
@@ -64,7 +64,7 @@ void parse_singular_field(ijnode & ij,
       break;
     case FieldDescriptor::CppType::CPPTYPE_MESSAGE:
       {
-        Message * p_sub = reflec->MutableMessage(pro, field);
+        protobuf::Message * p_sub = reflec->MutableMessage(pro, field);
         if (CONFIRM(p_sub)) { parse_proto_type(ij, *p_sub); }
         else { ij.set_failbit(); }
       }
@@ -77,7 +77,7 @@ void parse_singular_field(ijnode & ij,
 };
 
 void parse_repeated_field(ijnode & ij,
-                          Message * pro,
+                          protobuf::Message * pro,
                           FieldDescriptor const* field,
                           Reflection const* reflec)
 {
@@ -108,7 +108,7 @@ void parse_repeated_field(ijnode & ij,
       break;
     case FieldDescriptor::CppType::CPPTYPE_MESSAGE:
       {
-        Message * p_sub = reflec->AddMessage(pro, field);
+        protobuf::Message * p_sub = reflec->AddMessage(pro, field);
         if (CONFIRM(p_sub)) { parse_proto_type(ij, *p_sub); }
         else { ij.set_failbit(); }
       }
@@ -120,7 +120,7 @@ void parse_repeated_field(ijnode & ij,
   }
 };
 
-void merge_proto_type(ijnode & ij, Message & pro)
+void merge_proto_type(ijnode & ij, protobuf::Message & pro)
 {
   Descriptor const* pd = pro.GetDescriptor();
   Reflection const* reflec = pro.GetReflection();
@@ -147,7 +147,7 @@ void merge_proto_type(ijnode & ij, Message & pro)
   }
 }
 
-void parse_proto_type(ijnode & ij, Message & pro)
+void parse_proto_type(ijnode & ij, protobuf::Message & pro)
 {
   pro.Clear();
   merge_proto_type(ij, pro);

@@ -14,6 +14,8 @@ feedback.
 Functionality
 -------------
 
+* SWIG typemaps for boost::posix_time::ptime in R, Python and Java are in the
+`swig` directory.
 * The code under `jios` implements abstract interfaces for reading/writing
 json-like input/output. There are concrete classes for outputting single-line or
 pretty-printed JSON text. There are also functions for

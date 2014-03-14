@@ -38,4 +38,5 @@ include_directories(${CMAKE_BINARY_DIR})
 add_subdirectory(proto)
 add_subdirectory(lib)
 add_subdirectory(test)
+add_subdirectory(swig)
 

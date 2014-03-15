@@ -20,3 +20,9 @@ stopifnot( all.equal(t, return_time(t)) )
 t <- as.POSIXct(-Inf, origin="1970-01-01")
 stopifnot( all.equal(t, return_time(t)) )
 
+
+t <- as.POSIXct("1969-07-20 20:17:40.123456")
+t <- c(t, t, t, t)
+stopifnot( 4 == num_ptimes(t) )
+stopifnot( all.equal( 3600*(0:3), as.double(add_hours(t) - t)) )
+

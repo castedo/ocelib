@@ -39,8 +39,6 @@ private:
 
 // ojobject
 
-class ojknode;
-
 class ojobject
   : boost::noncopyable
 {
@@ -53,22 +51,18 @@ public:
 
   template<typename T> ojnode & operator [] (T const& k);
 
-  ojknode & operator * () { return *cur_; }
-
-  ojknode * operator -> () { return cur_.get(); }
-
   void terminate();
 
 public:
-  ojobject(spl::safe_ptr<ojknode> const& sub,
+  ojobject(spl::safe_ptr<ojnode> const& sub,
            spl::safe_ptr<ojnode> const& parent);
 
 private:
-  spl::safe_ptr<ojknode> cur_;
+  spl::safe_ptr<ojnode> cur_;
   std::shared_ptr<ojnode> parent_;
 };
 
-// ojnode & ojknode
+// ojnode
 
 class ojnode
 {
@@ -123,30 +117,6 @@ protected:
   virtual void do_flush() = 0;
   virtual void do_close() = 0;
   virtual void do_terminate() = 0;
-};
-
-class ojknode
-  : public ojnode
-{
-public:
-  template<typename T>
-  void key(T const& k)
-  {
-    do_key(boost::lexical_cast<std::string>(k));
-  }
-
-  void key(std::string const& k) { do_key(k); }
-
-  template<typename KeyT, typename ValueT>
-  void kprint(KeyT const& k, ValueT const& v)
-  {
-    do_key(k);
-    do_print(v);
-  }
-
-private:
-  friend class ojobject;
-
   virtual void do_key(std::string const& k) = 0;
 };
 

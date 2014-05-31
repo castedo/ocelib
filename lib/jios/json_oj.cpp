@@ -50,8 +50,8 @@ void json_escape(std::basic_ostream<Ch> & out, std::basic_string<Ch> const& in)
 // ostream_ojnode
 
 class ostream_ojnode
-  : public ojknode
-  , public enable_safe_from_this<ojknode>
+  : public ojnode
+  , public enable_safe_from_this<ojnode>
   , boost::noncopyable
 {
 public:
@@ -105,7 +105,7 @@ private:
   void init(bool object);
 
   virtual void post_comma_whitespace() {}
-  virtual safe_ptr<ojknode> make_sub_struct(safe_ptr<ostream> const& os,
+  virtual safe_ptr<ojnode> make_sub_struct(safe_ptr<ostream> const& os,
                                             bool in_object,
                                             bool multimode);
   virtual void pre_close_whitespace() {}
@@ -153,7 +153,7 @@ private:
   }
 
   virtual void post_comma_whitespace();
-  virtual safe_ptr<ojknode> make_sub_struct(safe_ptr<ostream> const& os,
+  virtual safe_ptr<ojnode> make_sub_struct(safe_ptr<ostream> const& os,
                                             bool in_object,
                                             bool multimode);
   virtual void pre_close_whitespace();
@@ -204,7 +204,7 @@ void ostream_ojnode::do_print_impl(T const& value)
   }
 }
 
-safe_ptr<ojknode>
+safe_ptr<ojnode>
     ostream_ojnode::make_sub_struct(safe_ptr<ostream> const& os,
                                          bool in_object,
                                          bool multimode)
@@ -347,7 +347,7 @@ ojobject::ojobject(ojobject && rhs)
   BOOST_ASSERT(!rhs.parent_);
 }
 
-ojobject::ojobject(spl::safe_ptr<ojknode> const& sub,
+ojobject::ojobject(spl::safe_ptr<ojnode> const& sub,
                    spl::safe_ptr<ojnode> const& parent)
   : cur_(sub)
   , parent_(parent)
@@ -370,7 +370,7 @@ void ojobject::terminate()
 
 // pretty_ojnode
 
-safe_ptr<ojknode>
+safe_ptr<ojnode>
     pretty_ojnode::make_sub_struct(safe_ptr<ostream> const& os,
                                            bool in_object,
                                            bool multimode)

@@ -157,8 +157,7 @@ void print_proto_type(ojnode & oj, protobuf::Message const& pro)
     if (field->is_repeated()) {
       int M = reflec->FieldSize(pro, field);
       if (M > 0) {
-        ojo->key(field->name());
-        ojarray oja = ojo->begin_array(M > 1);
+        ojarray oja = ojo[field->name()].begin_array(M > 1);
         for (int j = 0; j < M; ++j) {
           print_repeated_field(*oja, pro, field, j, reflec);
         }
@@ -166,8 +165,7 @@ void print_proto_type(ojnode & oj, protobuf::Message const& pro)
       }
     } else {
       if (reflec->HasField(pro, field)) {
-        ojo->key(field->name());
-        print_singular_field(*ojo, pro, field, reflec);
+        print_singular_field(ojo[field->name()], pro, field, reflec);
       }
     }
   }

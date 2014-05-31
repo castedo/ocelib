@@ -33,8 +33,7 @@ BOOST_AUTO_TEST_CASE( lined_json_test )
 {
   auto ss = make_safe<std::stringstream>();
   ojobject ojo = make_lined_json_ojnode(ss)->begin_object(true);
-  ojo->key("A");
-  ojarray oja = ojo->begin_array(true);
+  ojarray oja = ojo["A"].begin_array(true);
   BOOST_CHECK_EQUAL( ss->str(), "{\"A\":[" );
   oja->print("B");
   BOOST_CHECK_EQUAL( ss->str(), "{\"A\":[\"B\"" );

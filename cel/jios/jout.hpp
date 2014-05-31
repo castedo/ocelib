@@ -3,6 +3,7 @@
 
 #include <boost/noncopyable.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/optional.hpp>
 #include <spl/safe_ptr.hpp>
 
 namespace cel {
@@ -48,6 +49,10 @@ public:
 
   ojobject & operator = (ojobject && rhs);
 
+  ojnode & operator [] (std::string const& k);
+
+  template<typename T> ojnode & operator [] (T const& k);
+
   ojknode & operator * () { return *cur_; }
 
   ojknode * operator -> () { return cur_.get(); }
@@ -81,6 +86,8 @@ public:
   void print(char ch) { return do_print(ch); }
   void print(char const* p) { return do_print(p); }
   void print(std::string const& value) { return do_print(value); }
+
+  template<typename T> void print(boost::optional<T> const& ov);
 
   ojarray begin_array(bool multimode = false)
   {
@@ -138,8 +145,30 @@ public:
   }
 
 private:
+  friend class ojobject;
+
   virtual void do_key(std::string const& k) = 0;
 };
+
+inline ojnode & ojobject::operator [] (std::string const& k)
+{
+  cur_->do_key(k);
+  return *cur_;
+}
+
+template<typename T>
+ojnode & ojobject::operator [] (T const& k)
+{
+  cur_->do_key(boost::lexical_cast<std::string>(k));
+  return *cur_;
+}
+
+template<typename T>
+void ojnode::print(boost::optional<T> const& ov)
+{
+  if (ov) { this->print(*ov); }
+  else { this->print_null(); }
+}
 
 
 } // namespace

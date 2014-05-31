@@ -130,7 +130,7 @@ void merge_proto_type(ijnode & ij, protobuf::Message & pro)
   }
   ijobject ijo = ij.begin_object();
   while (!ijo.at_end()) {
-    FieldDescriptor const* field = pd->FindFieldByName(ijo->key());
+    FieldDescriptor const* field = pd->FindFieldByName(ijo.key());
     if (NULL == field) {
       ij.set_failbit();
       return;

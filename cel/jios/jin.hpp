@@ -33,29 +33,29 @@ private:
 
 // ijobject 
 
-class ijknode;
-
 class ijobject
   : boost::noncopyable
 {
 public:
   ijobject() = delete;
 
-  ijobject(spl::safe_ptr<ijknode> const& pimpl) : pimpl_(pimpl) {}
+  ijobject(spl::safe_ptr<ijnode> const& pimpl) : pimpl_(pimpl) {}
 
   ijobject(ijobject && rhs) : pimpl_(rhs.pimpl_) {}
 
-  ijknode * operator -> () { return pimpl_.get(); }
+  std::string key() const;
 
-  ijknode & operator * () { return *(pimpl_.get()); }
+  ijnode * operator -> () { return pimpl_.get(); }
+
+  ijnode & operator * () { return *(pimpl_.get()); }
 
   bool at_end() const;
 
 private:
-  spl::safe_ptr<ijknode> pimpl_;
+  spl::safe_ptr<ijnode> pimpl_;
 };
 
-// ijnode & ijknode
+// ijnode
 
 class ijnode
   : boost::noncopyable
@@ -108,19 +108,8 @@ private:
   virtual bool do_is_object() const = 0;
 
   virtual bool do_is_terminator() const = 0;
-};
-
-class ijknode : public ijnode
-{
-public:
-  ~ijknode() {}
-
-  std::string key() const { return do_key(); }
-
-private:
   virtual std::string do_key() const = 0;
 };
-
 
 ////////////////////////////////////////
 /// inline method implementations
@@ -128,6 +117,11 @@ private:
 inline bool ijarray::at_end() const
 {
   return pimpl_->do_is_terminator() || pimpl_->fail();
+}
+
+inline std::string ijobject::key() const
+{
+  return pimpl_.get()->do_key();
 }
 
 inline bool ijobject::at_end() const

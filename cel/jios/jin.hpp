@@ -15,11 +15,13 @@ class ijarray
   : boost::noncopyable
 {
 public:
-  ijarray() = delete;
+  ijarray();
 
   ijarray(spl::safe_ptr<ijnode> const& pimpl) : pimpl_(pimpl) {}
 
   ijarray(ijarray && rhs) : pimpl_(rhs.pimpl_) {}
+
+  ijarray & operator = (ijarray && rhs) { pimpl_ = rhs.pimpl_; return *this; }
 
   ijnode * operator -> () { return pimpl_.get(); }
 
@@ -37,11 +39,13 @@ class ijobject
   : boost::noncopyable
 {
 public:
-  ijobject() = delete;
+  ijobject();
 
   ijobject(spl::safe_ptr<ijnode> const& pimpl) : pimpl_(pimpl) {}
 
   ijobject(ijobject && rhs) : pimpl_(rhs.pimpl_) {}
+
+  ijobject & operator = (ijobject && r) { pimpl_ = r.pimpl_; return *this; }
 
   std::string key() const;
 

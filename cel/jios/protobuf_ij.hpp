@@ -12,6 +12,8 @@ void merge_proto_type(ijnode & ij, google::protobuf::Message & pro);
 
 void parse_proto_type(ijnode & ij, google::protobuf::Message & pro);
 
+void jinput(ijnode & ij, google::protobuf::Message & pro);
+
 
 } // namespace
 

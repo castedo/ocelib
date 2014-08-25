@@ -154,6 +154,11 @@ void parse_proto_type(ijnode & ij, protobuf::Message & pro)
   if (!pro.IsInitialized()) { ij.set_failbit(); }
 }
 
+void jinput(ijnode & ij, google::protobuf::Message & pro)
+{
+  parse_proto_type(ij, pro);
+}
+
 
 } // namespace
 

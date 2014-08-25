@@ -1,6 +1,7 @@
 #ifndef CEL_JIOS_JIN_HPP
 #define CEL_JIOS_JIN_HPP
 
+#include <boost/concept_check.hpp>
 #include <spl/safe_ptr.hpp>
 #include <cel/jios/jout.hpp>
 
@@ -132,6 +133,30 @@ inline bool ijobject::at_end() const
 {
   return pimpl_->do_is_terminator() || pimpl_->fail();
 }
+
+inline void jinput(ijnode & ij, int32_t & dest) { ij.parse(dest); }
+inline void jinput(ijnode & ij, uint32_t & dest) { ij.parse(dest); }
+inline void jinput(ijnode & ij, int64_t & dest) { ij.parse(dest); }
+inline void jinput(ijnode & ij, uint64_t & dest) { ij.parse(dest); }
+inline void jinput(ijnode & ij, double & dest) { ij.parse(dest); }
+inline void jinput(ijnode & ij, float & dest) { ij.parse(dest); }
+inline void jinput(ijnode & ij, bool & dest) { ij.parse(dest); }
+inline void jinput(ijnode & ij, std::string & dest) { ij.parse(dest); }
+inline void jinput(ijnode & ij, ojnode & dest) { ij.parse(dest); }
+
+// jinable concept
+
+template<class T>
+struct Jinable
+{
+  BOOST_CONCEPT_USAGE(Jinable)
+  {
+    jinput(*p_jin, *p_obj);
+  }
+
+  ijnode * p_jin;
+  T * p_obj;
+};
 
 
 } // namespace

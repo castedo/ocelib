@@ -74,6 +74,7 @@ public:
   void print(uint32_t const& value) { return do_print(value); }
   void print(int64_t const& value) { return do_print(value); }
   void print(uint64_t const& value) { return do_print(value); }
+  void print(long const& value) { return do_print(int64_t(value)); }
   void print(double const& value) { return do_print(value); }
   void print(float const& value) { return do_print(value); }
   void print(bool const& value) { return do_print(value); }

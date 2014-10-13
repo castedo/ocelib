@@ -256,7 +256,7 @@ void ostream_ojnode::do_terminate()
   if (CLEARED == state_) {
     if (!o_delim_) {
       this->pre_close_whitespace();
-      bool in_object = prekey_;
+      bool in_object(prekey_);
       *os_ << (in_object ? '}' : ']');
     }
     state_ = TERMINATED;

@@ -9,7 +9,7 @@ namespace cel {
 // null_ijnode
 
 class null_ijnode
-  : public ijnode
+  : public ijsource
   , public spl::enable_safe_from_this<null_ijnode>
 {
   bool fail_;
@@ -48,13 +48,9 @@ public:
   string do_key() const { return string(); }
 };
 
-// ijarray
+// ijstream
 
-ijarray::ijarray() : pimpl_(new null_ijnode()) {}
-
-// ijobject 
-
-ijobject::ijobject() : pimpl_(new null_ijnode()) {}
+ijstream::ijstream() : pimpl_(new null_ijnode()) {}
 
 
 } // namespace

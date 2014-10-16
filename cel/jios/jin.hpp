@@ -8,59 +8,58 @@
 namespace cel {
 
 
-// ijarray
-
 class ijnode;
+typedef ijnode ijsource;
+
+//! Stream of JSON-ish values (base for ijarray and ijobject)
+
+class ijstream
+  : boost::noncopyable
+{
+public:
+  ijstream();
+
+  ijstream(spl::safe_ptr<ijsource> const& pimpl) : pimpl_(pimpl) {}
+
+  ijstream(ijstream && rhs) : pimpl_(rhs.pimpl_) {}
+
+  ijstream & operator = (ijstream && rhs) { pimpl_ = rhs.pimpl_; return *this; }
+
+  ijnode * operator -> () { return pimpl_.get(); }
+
+  ijnode & operator * () { return *(pimpl_.get()); }
+
+  bool at_end() const;
+
+protected:
+  spl::safe_ptr<ijsource> pimpl_;
+};
+
+//! JSON-ish array
 
 class ijarray
-  : boost::noncopyable
+  : public ijstream
 {
 public:
-  ijarray();
+  ijarray() {}
 
-  ijarray(spl::safe_ptr<ijnode> const& pimpl) : pimpl_(pimpl) {}
-
-  ijarray(ijarray && rhs) : pimpl_(rhs.pimpl_) {}
-
-  ijarray & operator = (ijarray && rhs) { pimpl_ = rhs.pimpl_; return *this; }
-
-  ijnode * operator -> () { return pimpl_.get(); }
-
-  ijnode & operator * () { return *(pimpl_.get()); }
-
-  bool at_end() const;
-
-private:
-  spl::safe_ptr<ijnode> pimpl_;
+  ijarray(spl::safe_ptr<ijnode> const& pimpl) : ijstream(pimpl) {}
 };
 
-// ijobject 
+//! JSON-ish ijobject 
 
 class ijobject
-  : boost::noncopyable
+  : public ijstream
 {
 public:
-  ijobject();
+  ijobject() {}
 
-  ijobject(spl::safe_ptr<ijnode> const& pimpl) : pimpl_(pimpl) {}
-
-  ijobject(ijobject && rhs) : pimpl_(rhs.pimpl_) {}
-
-  ijobject & operator = (ijobject && r) { pimpl_ = r.pimpl_; return *this; }
+  ijobject(spl::safe_ptr<ijnode> const& pimpl) : ijstream(pimpl) {}
 
   std::string key() const;
-
-  ijnode * operator -> () { return pimpl_.get(); }
-
-  ijnode & operator * () { return *(pimpl_.get()); }
-
-  bool at_end() const;
-
-private:
-  spl::safe_ptr<ijnode> pimpl_;
 };
 
-// ijnode
+//! JSON-ish value
 
 class ijnode
   : boost::noncopyable
@@ -89,7 +88,7 @@ public:
   bool is_object() const { return do_is_object(); }
 
 private:
-  friend class ijarray;
+  friend class ijstream;
   friend class ijobject;
 
   virtual bool do_get_failbit() const = 0;
@@ -119,7 +118,7 @@ private:
 ////////////////////////////////////////
 /// inline method implementations
 
-inline bool ijarray::at_end() const
+inline bool ijstream::at_end() const
 {
   return pimpl_->do_is_terminator() || pimpl_->fail();
 }
@@ -127,11 +126,6 @@ inline bool ijarray::at_end() const
 inline std::string ijobject::key() const
 {
   return pimpl_.get()->do_key();
-}
-
-inline bool ijobject::at_end() const
-{
-  return pimpl_->do_is_terminator() || pimpl_->fail();
 }
 
 inline void jinput(ijnode & ij, int32_t & dest) { ij.parse(dest); }

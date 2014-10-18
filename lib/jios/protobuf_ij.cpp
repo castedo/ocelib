@@ -25,10 +25,8 @@ void parse_field(ijnode & ij,
           std::remove_const<typename std::remove_reference<T>::type>::type
       value_type;
   value_type value = value_type();
-  if (ij.parse(value)) {
+  if (ij.read(value)) {
     (reflec->*set_meth)(pro, field, value);
-  } else {
-    ij.set_failbit();
   }
 }
 
@@ -154,11 +152,15 @@ void parse_proto_type(ijnode & ij, protobuf::Message & pro)
   if (!pro.IsInitialized()) { ij.set_failbit(); }
 }
 
-void jinput(ijnode & ij, google::protobuf::Message & pro)
-{
-  parse_proto_type(ij, pro);
-}
-
 
 } // namespace
+
+namespace jios {
+
+void jios_read(ijnode & ij, google::protobuf::Message & pro)
+{
+  cel::parse_proto_type(ij, pro);
+}
+
+}
 

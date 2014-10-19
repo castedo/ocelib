@@ -91,16 +91,16 @@ void jios_read(ijnode & src, ojnode & dest)
       break;
     case json_type::jarray:
       {
-        ojarray oja = dest.begin_array(src.hint_multiline());
         ijarray ija = src.begin_array();
+        ojarray oja = dest.begin_array(ija.hint_multiline());
         while (!ija.at_end()) { ija >> *oja; }
         oja.terminate();
       }
       break;
     case json_type::jobject:
       {
-        ojobject ojo = dest.begin_object(src.hint_multiline());
         ijobject ijo = src.begin_object();
+        ojobject ojo = dest.begin_object(ijo.hint_multiline());
         while (!ijo.at_end()) {
           ijo >> ojo[ijo.key()];
         }

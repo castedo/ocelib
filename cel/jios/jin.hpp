@@ -38,6 +38,8 @@ public:
 
   ijstream & operator = (ijstream && rhs) { pimpl_ = rhs.pimpl_; return *this; }
 
+  bool fail() const;
+
   template<typename T> ijstream & operator >> (T & dest);
 
   ijnode * operator -> ();
@@ -45,6 +47,8 @@ public:
   ijnode & operator * ();
 
   bool at_end() const;
+
+  bool hint_multiline() const;
 
 protected:
   spl::safe_ptr<ijsource> pimpl_;
@@ -106,13 +110,14 @@ public:
 
   ijarray begin_array() { return do_begin_array(); }
   ijobject begin_object() { return do_begin_object(); }
-  bool hint_multiline() const { return do_hint_multiline(); }
 
   json_type type() const { return do_type(); }
   bool is_array() const { return json_type::jarray == do_type(); }
   bool is_object() const { return json_type::jobject == do_type(); }
 
 private:
+  friend ijstream;
+
   friend void jios_read(ijnode & ij, bool & dest);
   friend void jios_read(ijnode & ij, std::string & dest);
   friend void jios_read(ijnode & ij, int64_t & dest);
@@ -131,7 +136,7 @@ private:
 
   virtual ijarray do_begin_array() = 0;
   virtual ijobject do_begin_object() = 0;
-  virtual bool do_hint_multiline() const = 0;
+  virtual bool do_hint_multiline() const { return false; }
 };
 
 class ijsource : protected ijnode
@@ -145,6 +150,11 @@ class ijsource : protected ijnode
 
 ////////////////////////////////////////
 /// inline method implementations
+
+inline bool ijstream::fail() const
+{
+  return pimpl_->do_get_failbit();
+}
 
 template<typename T>
 inline ijstream & ijstream::operator >> (T & dest)
@@ -186,6 +196,11 @@ inline void jios_read(ijnode & ij, double & dest)
 inline bool ijstream::at_end() const
 {
   return pimpl_->do_is_terminator() || pimpl_->fail();
+}
+
+inline bool ijstream::hint_multiline() const
+{ 
+  return pimpl_->do_hint_multiline();
 }
 
 inline std::string ijobject::key() const

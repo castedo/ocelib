@@ -11,6 +11,7 @@ namespace jios {
 
 typedef cel::ojnode ojnode;
 class ijnode;
+typedef ijnode ijvalue;
 class ijsource;
 
 void jios_read(ijnode & ij, bool & dest);
@@ -40,13 +41,17 @@ public:
 
   bool fail() const;
 
+  ijvalue & get();
+
+  ijvalue const& peek();
+
   template<typename T> ijstream & operator >> (T & dest);
 
   ijnode * operator -> ();
 
   ijnode & operator * ();
 
-  bool at_end() const;
+  bool at_end();
 
   bool hint_multiline() const;
 
@@ -75,7 +80,7 @@ public:
 
   ijobject(spl::safe_ptr<ijsource> const& pimpl) : ijstream(pimpl) {}
 
-  std::string key() const;
+  std::string key();
 };
 
 //! JSON-ish value
@@ -101,11 +106,6 @@ public:
   template<typename T>
   bool read(T & dest) { jios_read(*this, dest); return !fail(); }
 
-  bool parse(int32_t & dest) { return this->read(dest); }
-  bool parse(double & dest) { return this->read(dest); }
-  bool parse(bool & dest) { return this->read(dest); }
-  bool parse(std::string & dest) { return this->read(dest); }
-
   bool ignore() { do_ignore(); return !fail(); }
 
   ijarray begin_array() { return do_begin_array(); }
@@ -116,7 +116,7 @@ public:
   bool is_object() const { return json_type::jobject == do_type(); }
 
 private:
-  friend ijstream;
+  friend class ijstream;
 
   friend void jios_read(ijnode & ij, bool & dest);
   friend void jios_read(ijnode & ij, std::string & dest);
@@ -156,6 +156,16 @@ inline bool ijstream::fail() const
   return pimpl_->do_get_failbit();
 }
 
+inline ijvalue & ijstream::get()
+{
+  return *pimpl_;
+}
+
+inline ijvalue const& ijstream::peek()
+{
+  return *pimpl_;
+}
+
 template<typename T>
 inline ijstream & ijstream::operator >> (T & dest)
 {
@@ -193,7 +203,7 @@ inline void jios_read(ijnode & ij, double & dest)
   ij.do_parse(dest);
 }
 
-inline bool ijstream::at_end() const
+inline bool ijstream::at_end()
 {
   return pimpl_->do_is_terminator() || pimpl_->fail();
 }
@@ -203,7 +213,7 @@ inline bool ijstream::hint_multiline() const
   return pimpl_->do_hint_multiline();
 }
 
-inline std::string ijobject::key() const
+inline std::string ijobject::key()
 {
   return pimpl_.get()->do_key();
 }

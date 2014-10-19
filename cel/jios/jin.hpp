@@ -41,15 +41,13 @@ public:
 
   bool fail() const;
 
+  void set_failbit();
+
   ijvalue & get();
 
   ijvalue const& peek();
 
   template<typename T> ijstream & operator >> (T & dest);
-
-  ijnode * operator -> ();
-
-  ijnode & operator * ();
 
   bool at_end();
 
@@ -156,6 +154,11 @@ inline bool ijstream::fail() const
   return pimpl_->do_get_failbit();
 }
 
+inline void ijstream::set_failbit()
+{
+  pimpl_->do_set_failbit();
+}
+
 inline ijvalue & ijstream::get()
 {
   return *pimpl_;
@@ -171,16 +174,6 @@ inline ijstream & ijstream::operator >> (T & dest)
 {
   pimpl_->read(dest);
   return *this;
-}
-
-inline ijnode * ijstream::operator -> ()
-{
-  return pimpl_.get();
-}
-
-inline ijnode & ijstream::operator * ()
-{
-  return *pimpl_;
 }
 
 inline void jios_read(ijnode & ij, bool & dest)
@@ -225,6 +218,7 @@ namespace cel {
 
 
 typedef jios::ijnode ijnode;
+typedef jios::ijvalue ijvalue;
 typedef jios::ijsource ijsource;
 typedef jios::ijstream ijstream;
 typedef jios::ijarray ijarray;

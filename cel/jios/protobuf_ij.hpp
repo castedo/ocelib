@@ -9,8 +9,6 @@ namespace cel {
 
 void merge_proto_type(ijnode & ij, google::protobuf::Message & pro);
 
-void parse_proto_type(ijnode & ij, google::protobuf::Message & pro);
-
 } // namespace
 
 namespace jios {

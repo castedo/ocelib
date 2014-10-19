@@ -63,7 +63,7 @@ void parse_singular_field(ijnode & ij,
     case FieldDescriptor::CppType::CPPTYPE_MESSAGE:
       {
         protobuf::Message * p_sub = reflec->MutableMessage(pro, field);
-        if (CONFIRM(p_sub)) { parse_proto_type(ij, *p_sub); }
+        if (CONFIRM(p_sub)) { ij.read(*p_sub); }
         else { ij.set_failbit(); }
       }
       break;
@@ -107,7 +107,7 @@ void parse_repeated_field(ijnode & ij,
     case FieldDescriptor::CppType::CPPTYPE_MESSAGE:
       {
         protobuf::Message * p_sub = reflec->AddMessage(pro, field);
-        if (CONFIRM(p_sub)) { parse_proto_type(ij, *p_sub); }
+        if (CONFIRM(p_sub)) { ij.read(*p_sub); }
         else { ij.set_failbit(); }
       }
       break;
@@ -117,6 +117,22 @@ void parse_repeated_field(ijnode & ij,
       return;
   }
 };
+
+void parse_any_field(ijvalue & ij,
+                     protobuf::Message * pro,
+                     FieldDescriptor const* field,
+                     Reflection const* reflec)
+{
+  if (field->is_repeated()) {
+    reflec->ClearField(pro, field);
+    ijarray ija = ij.begin_array();
+    while (!ija.at_end()) {
+      parse_repeated_field(ija.get(), pro, field, reflec);
+    }
+  } else {
+    parse_singular_field(ij, pro, field, reflec);
+  }
+}
 
 void merge_proto_type(ijnode & ij, protobuf::Message & pro)
 {
@@ -133,33 +149,19 @@ void merge_proto_type(ijnode & ij, protobuf::Message & pro)
       ij.set_failbit();
       return;
     }
-    if (field->is_repeated()) {
-      reflec->ClearField(&pro, field);
-      ijarray ija = ijo->begin_array();
-      while (!ija.at_end()) {
-        parse_repeated_field(*ija, &pro, field, reflec);
-      }
-    } else {
-      parse_singular_field(*ijo, &pro, field, reflec);
-    }
+    parse_any_field(ijo.get(), &pro, field, reflec);
   }
 }
-
-void parse_proto_type(ijnode & ij, protobuf::Message & pro)
-{
-  pro.Clear();
-  merge_proto_type(ij, pro);
-  if (!pro.IsInitialized()) { ij.set_failbit(); }
-}
-
 
 } // namespace
 
 namespace jios {
 
-void jios_read(ijnode & ij, google::protobuf::Message & pro)
+void jios_read(ijnode & ij, protobuf::Message & pro)
 {
-  cel::parse_proto_type(ij, pro);
+  pro.Clear();
+  cel::merge_proto_type(ij, pro);
+  if (!pro.IsInitialized()) { ij.set_failbit(); }
 }
 
 }

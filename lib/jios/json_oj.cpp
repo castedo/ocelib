@@ -1,6 +1,5 @@
 #include <cel/jios/json_oj.hpp>
 
-#include <cel/utility.hpp>
 #include <boost/optional.hpp>
 
 using namespace std;
@@ -51,13 +50,13 @@ void json_escape(std::basic_ostream<Ch> & out, std::basic_string<Ch> const& in)
 
 class ostream_ojnode
   : public ojnode
-  , public enable_safe_from_this<ostream_ojnode>
+  , public enable_shared_from_this<ostream_ojnode>
   , boost::noncopyable
 {
 public:
   virtual ~ostream_ojnode() {}
 
-  ostream_ojnode(safe_ptr<ostream> const& os, char delim)
+  ostream_ojnode(shared_ptr<ostream> const& os, char delim)
     : os_(os)
     , multimode_(false)
     , o_delim_(delim)
@@ -67,7 +66,7 @@ public:
     init(false);
   }
 
-  ostream_ojnode(safe_ptr<std::ostream> const& os,
+  ostream_ojnode(shared_ptr<ostream> const& os,
                  shared_ptr<ostream_ojnode> const& parent,
                       bool in_object,
                       bool multimode)
@@ -106,7 +105,7 @@ public:
 private:
   void init(bool object);
   virtual void post_comma_whitespace() {}
-  virtual safe_ptr<ojnode> make_sub_struct(safe_ptr<ostream> const& os,
+  virtual shared_ptr<ojnode> make_sub_struct(shared_ptr<ostream> const& os,
                                             bool in_object,
                                             bool multimode);
   virtual void pre_close_whitespace() {}
@@ -116,7 +115,7 @@ private:
   void out_suffix();
 
 protected:
-  safe_ptr<std::ostream> const os_;
+  shared_ptr<ostream> const os_;
   bool multimode_;
 
 private:
@@ -136,7 +135,7 @@ class pretty_ojnode
 public:
   virtual ~pretty_ojnode() {}
 
-  pretty_ojnode(safe_ptr<std::ostream> const& os, char delim)
+  pretty_ojnode(shared_ptr<ostream> const& os, char delim)
     : ostream_ojnode(os, delim)
     , indent_(0)
   {
@@ -144,7 +143,7 @@ public:
 
 private:
   // json array or object
-  pretty_ojnode(safe_ptr<std::ostream> const& os,
+  pretty_ojnode(shared_ptr<ostream> const& os,
        shared_ptr<ostream_ojnode> const& parent,
        bool in_object,
        bool multimode,
@@ -156,7 +155,7 @@ private:
   }
 
   virtual void post_comma_whitespace();
-  virtual safe_ptr<ojnode> make_sub_struct(safe_ptr<ostream> const& os,
+  virtual shared_ptr<ojnode> make_sub_struct(shared_ptr<ostream> const& os,
                                             bool in_object,
                                             bool multimode);
   virtual void pre_close_whitespace();
@@ -207,13 +206,13 @@ void ostream_ojnode::do_print_impl(T const& value)
   }
 }
 
-safe_ptr<ojnode>
-    ostream_ojnode::make_sub_struct(safe_ptr<ostream> const& os,
+shared_ptr<ojnode>
+    ostream_ojnode::make_sub_struct(shared_ptr<ostream> const& os,
                                          bool in_object,
                                          bool multimode)
 {
-  shared_ptr<ostream_ojnode> sp = safe_from_this();
-  return make_safe<ostream_ojnode>(os_, sp, in_object, multimode);
+  shared_ptr<ostream_ojnode> sp = shared_from_this();
+  return make_shared<ostream_ojnode>(os_, sp, in_object, multimode);
 }
 
 void ostream_ojnode::do_open()
@@ -230,14 +229,14 @@ ojarray ostream_ojnode::do_begin_array(bool multimode)
 {
   do_open();
   auto sub = this->make_sub_struct(os_, false, multimode);
-  return ojarray(sub);
+  return ojarray(safe_ptr<ojnode>(sub));
 }
 
 ojobject ostream_ojnode::do_begin_object(bool multimode)
 {
   do_open();
   auto sub = this->make_sub_struct(os_, true, multimode);
-  return ojobject(sub);
+  return ojobject(safe_ptr<ojnode>(sub));
 }
 
 void ostream_ojnode::do_flush()
@@ -247,7 +246,8 @@ void ostream_ojnode::do_flush()
 
 void ostream_ojnode::do_close()
 {
-  if (CONFIRM(OPENED == state_)) {
+  BOOST_ASSERT(OPENED == state_);
+  if (OPENED == state_) {
     out_suffix();
     state_ = CLEARED;
   } else {
@@ -272,6 +272,9 @@ void ostream_ojnode::do_terminate()
 
 void ostream_ojnode::init(bool in_object)
 {
+  if (!os_) {
+    BOOST_THROW_EXCEPTION(std::runtime_error("invalid null ostream"));
+  }
   if (in_object) { prekey_ = ""; }
   if (!o_delim_) {
     *os_ << (in_object ? '{' : '[');
@@ -358,15 +361,15 @@ void ojobject::terminate()
 
 // pretty_ojnode
 
-safe_ptr<ojnode>
-    pretty_ojnode::make_sub_struct(safe_ptr<ostream> const& os,
+shared_ptr<ojnode>
+    pretty_ojnode::make_sub_struct(shared_ptr<ostream> const& os,
                                            bool in_object,
                                            bool multimode)
 {
   size_t sub_indent = indent_ + (multimode ? 1 : 0);
-  shared_ptr<ostream_ojnode> sp = safe_from_this();
+  shared_ptr<ostream_ojnode> sp = shared_from_this();
   auto p = new pretty_ojnode(os_, sp, in_object, multimode, sub_indent);
-  return safe_ptr<pretty_ojnode>(p);
+  return shared_ptr<pretty_ojnode>(p);
 }
 
 void pretty_ojnode::pre_close_whitespace()

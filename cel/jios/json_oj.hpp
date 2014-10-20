@@ -5,7 +5,7 @@
 #include <spl/safe_ptr.hpp>
 #include <cel/jios/jout.hpp>
 
-namespace cel {
+namespace jios {
 
 
 // ojnode and ojarray simple implementations outputing JSON

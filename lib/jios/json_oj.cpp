@@ -6,7 +6,7 @@
 using namespace std;
 using namespace spl;
 
-namespace cel {
+namespace jios {
 
 
 // json escaping
@@ -51,7 +51,7 @@ void json_escape(std::basic_ostream<Ch> & out, std::basic_string<Ch> const& in)
 
 class ostream_ojnode
   : public ojnode
-  , public enable_safe_from_this<ojnode>
+  , public enable_safe_from_this<ostream_ojnode>
   , boost::noncopyable
 {
 public:
@@ -68,10 +68,12 @@ public:
   }
 
   ostream_ojnode(safe_ptr<std::ostream> const& os,
+                 shared_ptr<ostream_ojnode> const& parent,
                       bool in_object,
                       bool multimode)
     : os_(os)
     , multimode_(multimode)
+    , parent_(parent)
     , state_(CLEARED)
     , precomma_(false)
   {
@@ -98,12 +100,11 @@ public:
   virtual void do_key(std::string const& k) { prekey_ = k; }
 
   virtual void do_flush();
-  virtual void do_close();
+  void do_close();
   virtual void do_terminate();
 
 private:
   void init(bool object);
-
   virtual void post_comma_whitespace() {}
   virtual safe_ptr<ojnode> make_sub_struct(safe_ptr<ostream> const& os,
                                             bool in_object,
@@ -119,6 +120,7 @@ protected:
   bool multimode_;
 
 private:
+  shared_ptr<ostream_ojnode> parent_;
   boost::optional<char> const o_delim_;
   enum { CLEARED,   // cleared for printing (again)
          OPENED,    // open structure printing
@@ -143,10 +145,11 @@ public:
 private:
   // json array or object
   pretty_ojnode(safe_ptr<std::ostream> const& os,
+       shared_ptr<ostream_ojnode> const& parent,
        bool in_object,
        bool multimode,
        size_t indent)
-    : ostream_ojnode(os, in_object, multimode)
+    : ostream_ojnode(os, parent, in_object, multimode)
     , indent_(indent)
   {
     newline();
@@ -209,7 +212,8 @@ safe_ptr<ojnode>
                                          bool in_object,
                                          bool multimode)
 {
-  return make_safe<ostream_ojnode>(os_, in_object, multimode);
+  shared_ptr<ostream_ojnode> sp = safe_from_this();
+  return make_safe<ostream_ojnode>(os_, sp, in_object, multimode);
 }
 
 void ostream_ojnode::do_open()
@@ -226,14 +230,14 @@ ojarray ostream_ojnode::do_begin_array(bool multimode)
 {
   do_open();
   auto sub = this->make_sub_struct(os_, false, multimode);
-  return ojarray(sub, safe_from_this());
+  return ojarray(sub);
 }
 
 ojobject ostream_ojnode::do_begin_object(bool multimode)
 {
   do_open();
   auto sub = this->make_sub_struct(os_, true, multimode);
-  return ojobject(sub, safe_from_this());
+  return ojobject(sub);
 }
 
 void ostream_ojnode::do_flush()
@@ -263,6 +267,7 @@ void ostream_ojnode::do_terminate()
   } else {
     os_->setstate(std::ios_base::failbit);
   }
+  if (parent_) { parent_->do_close(); }
 }
 
 void ostream_ojnode::init(bool in_object)
@@ -308,7 +313,6 @@ void ostream_ojnode::out_suffix()
 
 ojarray::ojarray(ojarray && rhs)
   : cur_(std::move(rhs.cur_))
-  , parent_(std::move(rhs.parent_))
 {
 }
 
@@ -317,55 +321,39 @@ ojarray::ojarray(spl::safe_ptr<ojnode> const& sub)
 {
 }
 
-ojarray::ojarray(spl::safe_ptr<ojnode> const& sub,
-                 spl::safe_ptr<ojnode> const& parent)
-  : cur_(sub)
-  , parent_(parent)
-{
-}
-
 ojarray & ojarray::operator = (ojarray && rhs)
 {
-  parent_ = std::move(rhs.parent_);
   cur_ = std::move(rhs.cur_);
-  BOOST_ASSERT(!rhs.parent_);
   return *this;
 }
 
 void ojarray::terminate()
 {
   cur_->do_terminate();
-  if (parent_) { parent_->do_close(); }
 }
 
 // ojobject
  
 ojobject::ojobject(ojobject && rhs)
   : cur_(std::move(rhs.cur_))
-  , parent_(std::move(rhs.parent_))
 {
-  BOOST_ASSERT(!rhs.parent_);
 }
 
-ojobject::ojobject(spl::safe_ptr<ojnode> const& sub,
-                   spl::safe_ptr<ojnode> const& parent)
+ojobject::ojobject(spl::safe_ptr<ojnode> const& sub)
   : cur_(sub)
-  , parent_(parent)
 {
 }
+
 
 ojobject & ojobject::operator = (ojobject && rhs)
 {
-  parent_ = std::move(rhs.parent_);
   cur_ = std::move(rhs.cur_);
-  BOOST_ASSERT(!rhs.parent_);
   return *this;
 }
 
 void ojobject::terminate()
 {
   cur_->do_terminate();
-  if (parent_) { parent_->do_close(); }
 }
 
 // pretty_ojnode
@@ -376,7 +364,8 @@ safe_ptr<ojnode>
                                            bool multimode)
 {
   size_t sub_indent = indent_ + (multimode ? 1 : 0);
-  auto p = new pretty_ojnode(os_, in_object, multimode, sub_indent);
+  shared_ptr<ostream_ojnode> sp = safe_from_this();
+  auto p = new pretty_ojnode(os_, sp, in_object, multimode, sub_indent);
   return safe_ptr<pretty_ojnode>(p);
 }
 

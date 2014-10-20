@@ -3,6 +3,7 @@
 #include <cel/jios/json_oj.hpp>
 
 using namespace spl;
+using namespace jios;
 using namespace cel;
 
 // streamed

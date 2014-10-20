@@ -9,7 +9,6 @@
 namespace jios {
 
 
-typedef cel::ojnode ojnode;
 class ijnode;
 typedef ijnode ijvalue;
 class ijsource;

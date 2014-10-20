@@ -6,7 +6,7 @@
 #include <google/protobuf/message.h>
 #include <cel/jios/jout.hpp>
 
-namespace cel {
+namespace jios {
 
 
 void print_proto_type(ojnode & oj, google::protobuf::Message const& pro);

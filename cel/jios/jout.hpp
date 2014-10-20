@@ -6,12 +6,13 @@
 #include <boost/optional.hpp>
 #include <spl/safe_ptr.hpp>
 
-namespace cel {
+namespace jios {
 
 
 // ojarray
 
 class ojnode;
+typedef ojnode ojvalue;
 
 class ojarray
   : boost::noncopyable
@@ -29,12 +30,9 @@ public:
 
 public:
   ojarray(spl::safe_ptr<ojnode> const& sub);
-  ojarray(spl::safe_ptr<ojnode> const& sub,
-          spl::safe_ptr<ojnode> const& parent);
 
 private:
   spl::safe_ptr<ojnode> cur_;
-  std::shared_ptr<ojnode> parent_;
 };
 
 // ojobject
@@ -54,12 +52,10 @@ public:
   void terminate();
 
 public:
-  ojobject(spl::safe_ptr<ojnode> const& sub,
-           spl::safe_ptr<ojnode> const& parent);
+  ojobject(spl::safe_ptr<ojnode> const& sub);
 
 private:
   spl::safe_ptr<ojnode> cur_;
-  std::shared_ptr<ojnode> parent_;
 };
 
 // ojnode
@@ -116,7 +112,6 @@ protected:
   friend class ojobject;
 
   virtual void do_flush() = 0;
-  virtual void do_close() = 0;
   virtual void do_terminate() = 0;
   virtual void do_key(std::string const& k) = 0;
 };
@@ -143,6 +138,15 @@ void ojnode::print(boost::optional<T> const& ov)
 
 
 } // namespace
+
+namespace cel {
+
+typedef jios::ojnode ojnode;
+typedef jios::ojvalue ojvalue;
+typedef jios::ojarray ojarray;
+typedef jios::ojobject ojobject;
+
+}
 
 #endif
 

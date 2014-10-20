@@ -10,8 +10,9 @@ using namespace google;
 using google::protobuf::FieldDescriptor;
 using google::protobuf::Reflection;
 using google::protobuf::Descriptor;
+using namespace cel;
 
-namespace cel {
+namespace jios {
 
 
 template<typename T>

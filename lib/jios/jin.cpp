@@ -3,7 +3,6 @@
 #include <limits>
 
 using namespace std;
-using namespace spl;
 
 using cel::ojarray;
 using cel::ojobject;
@@ -14,7 +13,7 @@ namespace jios {
 template<typename T>
 void read_int(ijnode & ij, T & dest)
 {
-  typedef std::numeric_limits<T> numeric;
+  typedef numeric_limits<T> numeric;
   int64_t tmp;
   if (ij.read(tmp)) {
     if (tmp >= numeric::min() && tmp <= numeric::max()) {
@@ -58,9 +57,9 @@ void jios_read(ijnode & ij, uint64_t & dest)
 
 void jios_read(ijnode & ij, float & dest)
 {
-  typedef std::numeric_limits<float> numeric;
+  typedef numeric_limits<float> numeric;
   double tmp;
-  if (ij.read(tmp) && std::isfinite(tmp)) {
+  if (ij.read(tmp) && isfinite(tmp)) {
     if (tmp < numeric::min() || tmp > numeric::max()) {
       ij.set_failbit();
     } 
@@ -114,7 +113,7 @@ void jios_read(ijnode & src, ojnode & dest)
 
 class null_ijnode
   : public ijsource
-  , public spl::enable_safe_from_this<null_ijnode>
+  , public enable_shared_from_this<null_ijnode>
 {
   bool fail_;
 
@@ -129,17 +128,17 @@ public:
   void do_parse(int64_t & dest) override { do_set_failbit(); }
   void do_parse(double & dest) override { do_set_failbit(); }
   void do_parse(bool & dest) override { do_set_failbit(); }
-  void do_parse(std::string & dest) override { do_set_failbit(); }
+  void do_parse(string & dest) override { do_set_failbit(); }
   void do_ignore() override { do_set_failbit(); }
 
   ijarray do_begin_array() override {
     do_set_failbit();
-    return ijarray(safe_from_this());
+    return ijarray(shared_from_this());
   }
 
   ijobject do_begin_object() override {
     do_set_failbit();
-    return ijobject(safe_from_this());
+    return ijobject(shared_from_this());
   }
 
   bool do_hint_multiline() const override { return false; }

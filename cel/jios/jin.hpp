@@ -1,9 +1,9 @@
 #ifndef CEL_JIOS_JIN_HPP
 #define CEL_JIOS_JIN_HPP
 
+#include <memory>
 #include <boost/optional.hpp>
 #include <boost/concept_check.hpp>
-#include <spl/safe_ptr.hpp>
 #include <cel/jios/jout.hpp>
 
 namespace jios {
@@ -33,7 +33,7 @@ class ijstreamoid
 public:
   ijstreamoid();
 
-  ijstreamoid(spl::safe_ptr<ijsource> const& pimpl) : pimpl_(pimpl) {}
+  ijstreamoid(std::shared_ptr<ijsource> const& pimpl) : pimpl_(pimpl) {}
 
   ijstreamoid(ijstreamoid && rhs) : pimpl_(rhs.pimpl_) {}
 
@@ -48,7 +48,7 @@ public:
   bool hint_multiline() const;
 
 protected:
-  spl::safe_ptr<ijsource> pimpl_;
+  std::shared_ptr<ijsource> pimpl_;
 };
 
 class ijstream
@@ -57,7 +57,7 @@ class ijstream
 public:
   ijstream() {}
 
-  ijstream(spl::safe_ptr<ijsource> const& pimpl) : ijstreamoid(pimpl) {}
+  ijstream(std::shared_ptr<ijsource> const& pimpl) : ijstreamoid(pimpl) {}
 
   ijvalue & get();
 
@@ -74,7 +74,7 @@ class ijarray
 public:
   ijarray() {}
 
-  ijarray(spl::safe_ptr<ijsource> const& pimpl) : ijstream(pimpl) {}
+  ijarray(std::shared_ptr<ijsource> const& pimpl) : ijstream(pimpl) {}
 };
 
 //! JSON-ish ijobject 
@@ -85,7 +85,7 @@ class ijobject
 public:
   ijobject() {}
 
-  ijobject(spl::safe_ptr<ijsource> const& pimpl) : ijstreamoid(pimpl) {}
+  ijobject(std::shared_ptr<ijsource> const& pimpl) : ijstreamoid(pimpl) {}
 
   ijpair & get();
 

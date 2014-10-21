@@ -11,6 +11,7 @@ namespace jios {
 
 class ijnode;
 typedef ijnode ijvalue;
+class ijpair;
 class ijsource;
 
 void jios_read(ijnode & ij, bool & dest);
@@ -26,27 +27,21 @@ void jios_read(ijnode & src, ojnode & dest);
 
 //! Stream of JSON-ish values (base for ijarray and ijobject)
 
-class ijstream
+class ijstreamoid
   : boost::noncopyable
 {
 public:
-  ijstream();
+  ijstreamoid();
 
-  ijstream(spl::safe_ptr<ijsource> const& pimpl) : pimpl_(pimpl) {}
+  ijstreamoid(spl::safe_ptr<ijsource> const& pimpl) : pimpl_(pimpl) {}
 
-  ijstream(ijstream && rhs) : pimpl_(rhs.pimpl_) {}
+  ijstreamoid(ijstreamoid && rhs) : pimpl_(rhs.pimpl_) {}
 
-  ijstream & operator = (ijstream && rhs) { pimpl_ = rhs.pimpl_; return *this; }
+  ijstreamoid & operator = (ijstreamoid && rhs) { pimpl_ = rhs.pimpl_; return *this; }
 
   bool fail() const;
 
   void set_failbit();
-
-  ijvalue & get();
-
-  ijvalue const& peek();
-
-  template<typename T> ijstream & operator >> (T & dest);
 
   bool at_end();
 
@@ -54,6 +49,21 @@ public:
 
 protected:
   spl::safe_ptr<ijsource> pimpl_;
+};
+
+class ijstream
+  : public ijstreamoid
+{
+public:
+  ijstream() {}
+
+  ijstream(spl::safe_ptr<ijsource> const& pimpl) : ijstreamoid(pimpl) {}
+
+  ijvalue & get();
+
+  ijvalue const& peek();
+
+  template<typename T> ijstream & operator >> (T & dest);
 };
 
 //! JSON-ish array
@@ -70,14 +80,20 @@ public:
 //! JSON-ish ijobject 
 
 class ijobject
-  : public ijstream
+  : public ijstreamoid
 {
 public:
   ijobject() {}
 
-  ijobject(spl::safe_ptr<ijsource> const& pimpl) : ijstream(pimpl) {}
+  ijobject(spl::safe_ptr<ijsource> const& pimpl) : ijstreamoid(pimpl) {}
+
+  ijpair & get();
+
+  ijpair const& peek();
 
   std::string key();
+
+  template<typename T> ijobject & operator >> (T & dest);
 };
 
 //! JSON-ish value
@@ -105,6 +121,9 @@ public:
 
   bool ignore() { do_ignore(); return !fail(); }
 
+  ijarray array() { return do_begin_array(); }
+  ijobject object() { return do_begin_object(); }
+
   ijarray begin_array() { return do_begin_array(); }
   ijobject begin_object() { return do_begin_object(); }
 
@@ -113,6 +132,7 @@ public:
   bool is_object() const { return json_type::jobject == do_type(); }
 
 private:
+  friend class ijstreamoid;
   friend class ijstream;
 
   friend void jios_read(ijnode & ij, bool & dest);
@@ -136,24 +156,38 @@ private:
   virtual bool do_hint_multiline() const { return false; }
 };
 
-class ijsource : protected ijnode
+class ijpair : public ijvalue
 {
+public:
+  std::string key() const { return do_key(); }
+
+  template<class Map>
+  bool read_to_map(Map & m) { return this->read(m[do_key()]); }
+
+private:
+  friend class ijobject;
+
+  virtual std::string do_key() const = 0;
+};
+
+class ijsource : protected ijpair
+{
+  friend class ijstreamoid;
   friend class ijstream;
   friend class ijobject;
 
   virtual bool do_is_terminator() const = 0;
-  virtual std::string do_key() const = 0;
 };
 
 ////////////////////////////////////////
 /// inline method implementations
 
-inline bool ijstream::fail() const
+inline bool ijstreamoid::fail() const
 {
   return pimpl_->do_get_failbit();
 }
 
-inline void ijstream::set_failbit()
+inline void ijstreamoid::set_failbit()
 {
   pimpl_->do_set_failbit();
 }
@@ -173,6 +207,23 @@ inline ijstream & ijstream::operator >> (T & dest)
 {
   pimpl_->read(dest);
   return *this;
+}
+
+template<typename T>
+inline ijobject & ijobject::operator >> (T & dest)
+{
+  pimpl_->read(dest);
+  return *this;
+}
+
+inline ijpair & ijobject::get()
+{
+  return *pimpl_;
+}
+
+inline ijpair const& ijobject::peek()
+{
+  return *pimpl_;
 }
 
 inline void jios_read(ijnode & ij, bool & dest)
@@ -195,19 +246,19 @@ inline void jios_read(ijnode & ij, double & dest)
   ij.do_parse(dest);
 }
 
-inline bool ijstream::at_end()
+inline bool ijstreamoid::at_end()
 {
   return pimpl_->do_is_terminator() || pimpl_->fail();
 }
 
-inline bool ijstream::hint_multiline() const
+inline bool ijstreamoid::hint_multiline() const
 { 
   return pimpl_->do_hint_multiline();
 }
 
 inline std::string ijobject::key()
 {
-  return pimpl_.get()->do_key();
+  return pimpl_->do_key();
 }
 
 

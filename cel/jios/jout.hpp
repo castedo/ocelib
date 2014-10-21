@@ -9,10 +9,35 @@
 namespace jios {
 
 
-// ojarray
-
 class ojnode;
 typedef ojnode ojvalue;
+typedef ojnode ojsink;
+
+//! Base for streams of JSON-ish values
+
+class ojstreamoid
+  : boost::noncopyable
+{
+public:
+  ojstreamoid();
+
+  ojstreamoid(std::unique_ptr<ojsink> && p) : pimpl_(std::move(p)) {}
+
+  void terminate();
+
+protected:
+  std::unique_ptr<ojsink> pimpl_;
+};
+
+class ojstream
+  : public ojstreamoid
+{
+  ojvalue & put();
+
+  template<typename T> ojstream & operator << (T const& src);
+};
+
+// ojarray
 
 class ojarray
   : boost::noncopyable
@@ -44,6 +69,8 @@ public:
   ojobject(ojobject && rhs);
 
   ojobject & operator = (ojobject && rhs);
+
+  ojvalue & put(std::string const& k);
 
   ojnode & operator [] (std::string const& k);
 
@@ -80,6 +107,19 @@ public:
 
   template<typename T> void print(boost::optional<T> const& ov);
 
+  template<typename T>
+  void write(T const& src) { return this->print(src); }
+
+  ojarray array(bool multimode = false)
+  {
+     return do_begin_array(multimode);
+  }
+
+  ojobject object(bool multimode = false)
+  {
+     return do_begin_object(multimode);
+  }
+
   ojarray begin_array(bool multimode = false)
   {
      return do_begin_array(multimode);
@@ -108,6 +148,8 @@ protected:
   virtual ojarray do_begin_array(bool multimode) = 0;
   virtual ojobject do_begin_object(bool multimode) = 0;
 
+  friend class ojstreamoid;
+  friend class ojstream;
   friend class ojarray;
   friend class ojobject;
 
@@ -134,6 +176,30 @@ void ojnode::print(boost::optional<T> const& ov)
 {
   if (ov) { this->print(*ov); }
   else { this->print_null(); }
+}
+
+////////////////////////////////////////
+/// inline method implementations
+
+inline void ojstreamoid::terminate()
+{
+  if (pimpl_) {
+    pimpl_->do_terminate();
+  }
+}
+
+inline ojvalue & ojstream::put()
+{
+  return *pimpl_;
+}
+
+template<typename T>
+inline ojstream & ojstream::operator << (T const& src)
+{
+  if (pimpl_) {
+    pimpl_->print(src);
+  }
+  return *this;
 }
 
 

@@ -102,7 +102,7 @@ void jios_read(ijnode & src, ojnode & dest)
         ijobject ijo = src.begin_object();
         ojobject ojo = dest.begin_object(ijo.hint_multiline());
         while (!ijo.at_end()) {
-          ijo >> ojo[ijo.key()];
+          ijo.get().read_to_map(ojo);
         }
         ojo.terminate();
       }
@@ -148,9 +148,9 @@ public:
   string do_key() const override { return string(); }
 };
 
-// ijstream
+// ijstreamoid
 
-ijstream::ijstream() : pimpl_(new null_ijnode()) {}
+ijstreamoid::ijstreamoid() : pimpl_(new null_ijnode()) {}
 
 
 } // namespace

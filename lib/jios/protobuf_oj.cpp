@@ -175,9 +175,7 @@ void print_proto_type(ojnode & oj, protobuf::Message const& pro)
 
 void print_proto_type(ostream & os, protobuf::Message const& pro)
 {
-  spl::safe_ptr<ostream> p_os(&os, cel::null_deleter());
-  ojarray oj = make_json_ojroot(p_os);
-  print_proto_type(*oj, pro);
+  print_proto_type(json_out(os).put(), pro);
   os << endl;
 }
 

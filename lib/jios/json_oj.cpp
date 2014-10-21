@@ -401,15 +401,20 @@ ojstream json_out(std::ostream & os, char delim)
   return shared_ptr<ojsink>(new pretty_ojnode(sp, delim));
 }
 
+ojstream json_out(shared_ptr<ostream> const& pos, char delim)
+{
+  return shared_ptr<ojsink>(new pretty_ojnode(pos, delim));
+}
+
 ojstream lined_json_out(std::ostream & os)
 {
   safe_ptr<ostream> sp(&os, boost::null_deleter());
   return shared_ptr<ojsink>(new ostream_ojnode(sp, '\n'));
 }
 
-ojarray make_json_ojroot(safe_ptr<std::ostream> const& os, char delim)
+ojstream lined_json_out(shared_ptr<ostream> const& pos, char delim)
 {
-  return ojarray(make_safe<pretty_ojnode>(os, delim));
+  return shared_ptr<ojsink>(new ostream_ojnode(pos, delim));
 }
 
 

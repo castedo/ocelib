@@ -1,5 +1,6 @@
 #include <cel/jios/json_oj.hpp>
 
+#include <boost/core/null_deleter.hpp>
 #include <boost/optional.hpp>
 
 using namespace std;
@@ -394,14 +395,16 @@ void pretty_ojnode::newline()
 
 // root factory function
 
-safe_ptr<ojnode> make_lined_json_ojnode(safe_ptr<ostream> const& os)
+ojstream json_out(std::ostream & os, char delim)
 {
-  return make_safe<ostream_ojnode>(os, '\n');
+  safe_ptr<ostream> sp(&os, boost::null_deleter());
+  return shared_ptr<ojsink>(new pretty_ojnode(sp, delim));
 }
 
-safe_ptr<ojnode> make_pretty_json_ojnode(safe_ptr<ostream> const& os, char delim)
+ojstream lined_json_out(std::ostream & os)
 {
-  return make_safe<pretty_ojnode>(os, delim);
+  safe_ptr<ostream> sp(&os, boost::null_deleter());
+  return shared_ptr<ojsink>(new ostream_ojnode(sp, '\n'));
 }
 
 ojarray make_json_ojroot(safe_ptr<std::ostream> const& os, char delim)

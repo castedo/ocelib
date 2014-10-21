@@ -21,17 +21,24 @@ class ojstreamoid
 public:
   ojstreamoid();
 
-  ojstreamoid(std::unique_ptr<ojsink> && p) : pimpl_(std::move(p)) {}
+  ojstreamoid(std::shared_ptr<ojsink> const& p) : pimpl_(p) {}
+
+  ojstreamoid(ojstreamoid && rhs) : pimpl_(std::move(rhs.pimpl_)) {}
 
   void terminate();
 
 protected:
-  std::unique_ptr<ojsink> pimpl_;
+  std::shared_ptr<ojsink> pimpl_;
 };
 
 class ojstream
   : public ojstreamoid
 {
+public:
+  ojstream();
+
+  ojstream(std::shared_ptr<ojsink> const& p) : ojstreamoid(p) {}
+
   ojvalue & put();
 
   template<typename T> ojstream & operator << (T const& src);

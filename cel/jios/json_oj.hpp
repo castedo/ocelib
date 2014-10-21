@@ -10,12 +10,8 @@ namespace jios {
 
 // ojnode and ojarray simple implementations outputing JSON
 
-spl::safe_ptr<ojnode>
-    make_lined_json_ojnode(spl::safe_ptr<std::ostream> const& os);
-
-spl::safe_ptr<ojnode>
-    make_pretty_json_ojnode(spl::safe_ptr<std::ostream> const& os,
-                            char delim = EOF);
+ojstream json_out(std::ostream & os, char delim = EOF);
+ojstream lined_json_out(std::ostream & os);
 
 ojarray make_json_ojroot(spl::safe_ptr<std::ostream> const& os,
                          char delim = EOF);

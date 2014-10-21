@@ -1,7 +1,7 @@
 #include <cel/jios/protobuf_oj.hpp>
 
 #include <boost/filesystem/fstream.hpp>
-#include <cel/utility.hpp>
+#include <boost/assert.hpp>
 #include <cel/jios/json_oj.hpp>
 
 using namespace std;
@@ -129,11 +129,13 @@ int print_count(protobuf::Message const& pro,
                 Reflection const* reflec)
 {
   int ret = 0;
-  if (CONFIRM(pd && reflec)) {
+  BOOST_ASSERT(pd && reflec);
+  if (pd && reflec) {
     int N = pd->field_count();
     for (int i = 0; i < N; ++i) {
       FieldDescriptor const* field = pd->field(i);
-      if (CONFIRM(field)) {
+      BOOST_ASSERT(field);
+      if (field) {
         if (field->is_repeated()) {
           if (reflec->FieldSize(pro, field) > 0) { ++ret; }
         } else {
@@ -149,12 +151,14 @@ void print_proto_type(ojnode & oj, protobuf::Message const& pro)
 {
   Descriptor const* pd = pro.GetDescriptor();
   Reflection const* reflec = pro.GetReflection();
-  if (!CONFIRM(pd && reflec)) return;
+  BOOST_ASSERT(pd && reflec);
+  if (!(pd && reflec)) return;
   ojobject ojo = oj.begin_object(print_count(pro, pd, reflec) > 1);
   int N = pd->field_count();
   for (int i = 0; i < N; ++i) {
     FieldDescriptor const* field = pd->field(i);
-    if (!CONFIRM(field)) return;
+    BOOST_ASSERT(field);
+    if (!field) return;
     if (field->is_repeated()) {
       int M = reflec->FieldSize(pro, field);
       if (M > 0) {

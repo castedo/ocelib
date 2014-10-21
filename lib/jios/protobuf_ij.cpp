@@ -1,6 +1,6 @@
 #include <cel/jios/protobuf_ij.hpp>
 
-#include <cel/utility.hpp>
+#include <boost/assert.hpp>
 
 using namespace google;
 using google::protobuf::FieldDescriptor;
@@ -63,7 +63,8 @@ void parse_singular_field(ijnode & ij,
     case FieldDescriptor::CppType::CPPTYPE_MESSAGE:
       {
         protobuf::Message * p_sub = reflec->MutableMessage(pro, field);
-        if (CONFIRM(p_sub)) { ij.read(*p_sub); }
+        BOOST_ASSERT(p_sub);
+        if (p_sub) { ij.read(*p_sub); }
         else { ij.set_failbit(); }
       }
       break;
@@ -107,7 +108,8 @@ void parse_repeated_field(ijnode & ij,
     case FieldDescriptor::CppType::CPPTYPE_MESSAGE:
       {
         protobuf::Message * p_sub = reflec->AddMessage(pro, field);
-        if (CONFIRM(p_sub)) { ij.read(*p_sub); }
+        BOOST_ASSERT(p_sub);
+        if (p_sub) { ij.read(*p_sub); }
         else { ij.set_failbit(); }
       }
       break;
@@ -138,7 +140,8 @@ void merge_proto_type(ijnode & ij, protobuf::Message & pro)
 {
   Descriptor const* pd = pro.GetDescriptor();
   Reflection const* reflec = pro.GetReflection();
-  if (!CONFIRM(pd && reflec)) {
+  BOOST_ASSERT(pd && reflec);
+  if (!(pd && reflec)) {
     ij.set_failbit();
     return;
   }

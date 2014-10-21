@@ -1,10 +1,10 @@
 #ifndef CEL_JIOS_JOUT_HPP
 #define CEL_JIOS_JOUT_HPP
 
+#include <memory>
 #include <boost/noncopyable.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
-#include <spl/safe_ptr.hpp>
 
 namespace jios {
 
@@ -50,21 +50,21 @@ class ojarray
   : boost::noncopyable
 {
 public:
-  ojarray(ojarray && rhs);
+  ojarray(ojarray && rhs) : pimpl_(std::move(rhs.pimpl_)) {}
 
   ojarray & operator = (ojarray && rhs);
 
-  ojnode & operator * () { return *cur_; }
+  ojnode & operator * () { return *pimpl_; }
 
-  ojnode * operator -> () { return cur_.get(); }
+  ojnode * operator -> () { return pimpl_.get(); }
 
   void terminate();
 
 public:
-  ojarray(spl::safe_ptr<ojnode> const& sub);
+  ojarray(std::shared_ptr<ojsink> const& p) : pimpl_(p) {}
 
 private:
-  spl::safe_ptr<ojnode> cur_;
+  std::shared_ptr<ojsink> pimpl_;
 };
 
 // ojobject
@@ -73,7 +73,7 @@ class ojobject
   : boost::noncopyable
 {
 public:
-  ojobject(ojobject && rhs);
+  ojobject(ojobject && rhs) : pimpl_(std::move(rhs.pimpl_)) {}
 
   ojobject & operator = (ojobject && rhs);
 
@@ -86,10 +86,10 @@ public:
   void terminate();
 
 public:
-  ojobject(spl::safe_ptr<ojnode> const& sub);
+  ojobject(std::shared_ptr<ojsink> const& p) : pimpl_(p) {}
 
 private:
-  spl::safe_ptr<ojnode> cur_;
+  std::shared_ptr<ojsink> pimpl_;
 };
 
 // ojnode
@@ -167,15 +167,15 @@ protected:
 
 inline ojnode & ojobject::operator [] (std::string const& k)
 {
-  cur_->do_key(k);
-  return *cur_;
+  pimpl_->do_key(k);
+  return *pimpl_;
 }
 
 template<typename T>
 ojnode & ojobject::operator [] (T const& k)
 {
-  cur_->do_key(boost::lexical_cast<std::string>(k));
-  return *cur_;
+  pimpl_->do_key(boost::lexical_cast<std::string>(k));
+  return *pimpl_;
 }
 
 template<typename T>

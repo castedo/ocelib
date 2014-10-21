@@ -4,7 +4,6 @@
 #include <boost/optional.hpp>
 
 using namespace std;
-using namespace spl;
 
 namespace jios {
 
@@ -229,15 +228,13 @@ void ostream_ojnode::do_open()
 ojarray ostream_ojnode::do_begin_array(bool multimode)
 {
   do_open();
-  auto sub = this->make_sub_struct(os_, false, multimode);
-  return ojarray(safe_ptr<ojnode>(sub));
+  return this->make_sub_struct(os_, false, multimode);
 }
 
 ojobject ostream_ojnode::do_begin_object(bool multimode)
 {
   do_open();
-  auto sub = this->make_sub_struct(os_, true, multimode);
-  return ojobject(safe_ptr<ojnode>(sub));
+  return this->make_sub_struct(os_, true, multimode);
 }
 
 void ostream_ojnode::do_flush()
@@ -315,49 +312,34 @@ void ostream_ojnode::out_suffix()
 
 // ojarray
 
-ojarray::ojarray(ojarray && rhs)
-  : cur_(std::move(rhs.cur_))
-{
-}
-
-ojarray::ojarray(spl::safe_ptr<ojnode> const& sub)
-  : cur_(sub)
-{
-}
-
 ojarray & ojarray::operator = (ojarray && rhs)
 {
-  cur_ = std::move(rhs.cur_);
+  pimpl_ = std::move(rhs.pimpl_);
   return *this;
 }
 
 void ojarray::terminate()
 {
-  cur_->do_terminate();
+  BOOST_ASSERT(pimpl_);
+  if (pimpl_) {
+    pimpl_->do_terminate();
+  }
 }
 
 // ojobject
  
-ojobject::ojobject(ojobject && rhs)
-  : cur_(std::move(rhs.cur_))
-{
-}
-
-ojobject::ojobject(spl::safe_ptr<ojnode> const& sub)
-  : cur_(sub)
-{
-}
-
-
 ojobject & ojobject::operator = (ojobject && rhs)
 {
-  cur_ = std::move(rhs.cur_);
+  pimpl_ = std::move(rhs.pimpl_);
   return *this;
 }
 
 void ojobject::terminate()
 {
-  cur_->do_terminate();
+  BOOST_ASSERT(pimpl_);
+  if (pimpl_) {
+    pimpl_->do_terminate();
+  }
 }
 
 // pretty_ojnode
@@ -397,7 +379,7 @@ void pretty_ojnode::newline()
 
 ojstream json_out(std::ostream & os, char delim)
 {
-  safe_ptr<ostream> sp(&os, boost::null_deleter());
+  shared_ptr<ostream> sp(&os, boost::null_deleter());
   return shared_ptr<ojsink>(new pretty_ojnode(sp, delim));
 }
 
@@ -408,7 +390,7 @@ ojstream json_out(shared_ptr<ostream> const& pos, char delim)
 
 ojstream lined_json_out(std::ostream & os)
 {
-  safe_ptr<ostream> sp(&os, boost::null_deleter());
+  shared_ptr<ostream> sp(&os, boost::null_deleter());
   return shared_ptr<ojsink>(new ostream_ojnode(sp, '\n'));
 }
 

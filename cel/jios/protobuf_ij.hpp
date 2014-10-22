@@ -3,15 +3,11 @@
 
 #include <istream>
 #include <google/protobuf/message.h>
-#include <cel/jios/jin.hpp>
-
-namespace cel {
-
-void merge_proto_type(ijnode & ij, google::protobuf::Message & pro);
-
-} // namespace
+#include <jios/jin.hpp>
 
 namespace jios {
+
+void merge_proto_type(ijnode & ij, google::protobuf::Message & pro);
 
 void jios_read(ijnode & ij, google::protobuf::Message & pro);
 

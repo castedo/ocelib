@@ -7,7 +7,7 @@ using google::protobuf::FieldDescriptor;
 using google::protobuf::Reflection;
 using google::protobuf::Descriptor;
 
-namespace cel {
+namespace jios {
 
 
 template<typename T>
@@ -156,14 +156,10 @@ void merge_proto_type(ijnode & ij, protobuf::Message & pro)
   }
 }
 
-} // namespace
-
-namespace jios {
-
 void jios_read(ijnode & ij, protobuf::Message & pro)
 {
   pro.Clear();
-  cel::merge_proto_type(ij, pro);
+  merge_proto_type(ij, pro);
   if (!pro.IsInitialized()) { ij.set_failbit(); }
 }
 

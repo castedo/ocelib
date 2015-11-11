@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 include_directories("/usr/lib/R/include/")
+include_directories("/usr/lib64/R/include/")
 
 set_source_files_properties(test.i PROPERTIES CPLUSPLUS ON)
 swig_add_module(test_swig_R R test.cpp test.i)

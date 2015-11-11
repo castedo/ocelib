@@ -2,6 +2,7 @@
 #define CEL_POTENTIAL_PTR_HPP
 
 #include <memory>
+#include <boost/assert.hpp>
 #include <boost/throw_exception.hpp>
 
 namespace cel {
@@ -32,62 +33,116 @@ public:
   potential_ptr(std::unique_ptr<T> && p)
     : pp_(std::make_shared<std::unique_ptr<T>>(std::move(p))) {}
   
-  potential_ptr(potential_ptr const& r)
-    : pp_(r.pp_allocated()) {}
+  potential_ptr(potential_ptr const& r);
 
   potential_ptr & operator = (potential_ptr rhs) noexcept
   { swap(*this, rhs); return *this; }
 
-  T * operator -> () const noexcept { return this->get(); }
+  T * operator -> () const { return this->get(); }
 
-  T & operator * () & noexcept { return *(this->get()); }
+  T & operator * () & { return *(this->get()); }
 
-  explicit operator bool () const noexcept { return bool(this->get()); }
+  explicit operator bool () const { return bool(this->get()); }
 
-  bool operator ! () const noexcept { return !bool(*this); }
+  bool operator ! () const { return !bool(*this); }
 
   bool operator != (potential_ptr const& r) const noexcept
   { return !(*this == r); }
 
-  bool operator == (potential_ptr const& r) const noexcept
-  {
-    // pp_ points to unique_ptr, thus diff pp_ must have diff unique_ptr vals
-    return pp_ && r.pp_ && pp_ == r.pp_;
-  }
+  bool operator == (potential_ptr const& r) const noexcept;
 
-  T * get() const noexcept { return (pp_ ? pp_->get() : nullptr); }
+  T * get() const;
 
-  void reset() noexcept { pp_.reset(); }
-
-  bool has_copies() const noexcept { return pp_ && pp_.use_count() > 1; }
+  void reset() { pp_.reset(); unrealized_.reset(); }
 
   void realize(std::unique_ptr<T> && p)
   {
-    if (not this->try_realize(std::move(p))) {
-      BOOST_THROW_EXCEPTION(std::logic_error("potential_ptr already realized"));
+    if (not realize_try(std::move(p))) {
+      BOOST_THROW_EXCEPTION(std::logic_error("invalid potential_ptr realize"));
     }
   }
 
-  bool try_realize(std::unique_ptr<T> && p)
+  bool realize_try(std::unique_ptr<T> && p);
+
+  void equate(potential_ptr & that)
   {
-    if (!p) return false;
-    std::unique_ptr<T> & up = *pp_allocated();
-    if (up) return false;
-    up = std::move(p);
-    return true;
+    if (not equate_try(that)) {
+      BOOST_THROW_EXCEPTION(std::logic_error("invalid potential_ptr equate"));
+    }
   }
+
+  bool equate_try(potential_ptr & that);
 
   friend void swap(potential_ptr & a, potential_ptr & b) noexcept
-  { swap(a.pp_, b.pp_); }
+  { swap(a.pp_, b.pp_); swap(a.unrealized_, b.unrealized_); }
 
 private:
-  std::shared_ptr<std::unique_ptr<T>> const& pp_allocated() const
-  {
-    return (pp_ ? pp_ : pp_ = std::make_shared<std::unique_ptr<T>>());
-  }
-
   mutable std::shared_ptr<std::unique_ptr<T>> pp_;
+  mutable std::shared_ptr<potential_ptr<T>> unrealized_;
 };
+
+// impl
+
+template<class T>
+potential_ptr<T>::potential_ptr(potential_ptr<T> const& that)
+  : pp_(that.pp_), unrealized_(that.unrealized_)
+{
+  if (!pp_ && !unrealized_) {
+    unrealized_ = (that.unrealized_ = std::make_shared<potential_ptr<T>>());
+  }
+}
+
+template<class T>
+bool potential_ptr<T>::operator == (potential_ptr<T> const& that) const noexcept
+{
+  if (this == &that) return true;
+  if (unrealized_) return that == *unrealized_;
+  if (that.unrealized_) return *that.unrealized_ == *this;
+  // pp_ points to unique_ptr, thus diff pp_ must have diff unique_ptr vals
+  return pp_ && that.pp_ && pp_ == that.pp_;
+}
+
+template<class T>
+T * potential_ptr<T>::get() const
+{
+  if (unrealized_) {
+    BOOST_ASSERT(!pp_);
+    pp_ = unrealized_->pp_;
+    if (pp_) {
+      unrealized_.reset();
+    }
+  }
+  return (pp_ ? pp_->get() : nullptr);
+}
+
+template<class T>
+bool potential_ptr<T>::realize_try(std::unique_ptr<T> && p)
+{
+  if (!p || pp_) return false;
+  if (unrealized_) {
+    unrealized_->realize_try(std::move(p));
+    pp_ = unrealized_->pp_;
+    if (!pp_) return false;
+    unrealized_.reset();
+  } else {
+    pp_ = std::make_shared<std::unique_ptr<T>>();
+    *pp_ = std::move(p);
+  }
+  return true;
+}
+
+template<class T>
+bool potential_ptr<T>::equate_try(potential_ptr<T> & that)
+{
+  if (this == &that) return true;
+  if (unrealized_) return that.equate_try(*unrealized_);
+  if (that.unrealized_) return that.unrealized_->equate_try(*this);
+  if (!pp_) {
+    *this = that;
+    return true;
+  }
+  return that.pp_ == pp_;
+}
 
 
 } // namespace

@@ -12,8 +12,8 @@ boost::unit_test::test_suite* init_unit_test_suite(int, char* [])
 BOOST_AUTO_TEST_CASE( potential_ptr_test )
 {
   potential_ptr<int> p0;
-  potential_ptr<int> p1(new int(12));
-  potential_ptr<int> p2(new int(12));
+  potential_ptr<int> p1(unique_ptr<int>(new int(12)));
+  potential_ptr<int> p2(unique_ptr<int>(new int(12)));
   potential_ptr<int> p3;
   p3 = p2;
   BOOST_CHECK( p0 != p1 );
@@ -52,6 +52,7 @@ BOOST_AUTO_TEST_CASE( potential_ptr_equate_tests )
   BOOST_CHECK( p1 == p0 );
   BOOST_CHECK( p2 == p1 );
 
+  BOOST_CHECK_EQUAL( *p0, 12 );
   BOOST_CHECK_EQUAL( *p1, 12 );
   BOOST_CHECK_EQUAL( *p2, 12 );
 }

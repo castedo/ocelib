@@ -8,6 +8,45 @@
 namespace cel {
 
 
+/// lazy_non_null_shared_ptr
+/* lazy_non_null_shared_ptr represents a non-null shared_ptr defaulting to a
+ * shared_ptr virtually pointing to a default value of T.
+ */
+
+template<class T>
+class lazy_non_null_shared_ptr
+{
+public:
+  lazy_non_null_shared_ptr() noexcept {}
+  lazy_non_null_shared_ptr(lazy_non_null_shared_ptr const& rhs)
+    : real_(rhs.be_real()) {}
+
+  lazy_non_null_shared_ptr & operator = (lazy_non_null_shared_ptr rhs) noexcept
+  { swap(*this, rhs); return *this; }
+
+  T * operator -> () const { return be_real().get(); }
+
+  T & operator * () const { return *be_real(); }
+
+  void assign_default() { real_.reset(); } 
+
+  bool unique() const { return !real_ || real_.unique(); }
+
+  bool is_default() const { return !real_ || *real_ == T(); }
+
+  bool unique_default() const { return unique() && is_default(); }
+
+  friend void swap(lazy_non_null_shared_ptr & a,
+                   lazy_non_null_shared_ptr & b) noexcept
+  { swap(a.real_, b.real_); }
+
+public:
+  std::shared_ptr<T> const be_real() const&
+  { return (real_ ? real_ : (real_ = std::make_shared<T>())); }
+
+  mutable std::shared_ptr<T> real_;
+};
+
 /// potential_ptr
 /* potential_ptr represents a non-null address that may yet to be realized.
  * A potential_ptr never represents a null address even though get() may
@@ -27,33 +66,27 @@ class potential_ptr
 public:
   potential_ptr() noexcept {}
 
-  potential_ptr(T * p)
-    : pp_(std::make_shared<std::unique_ptr<T>>(p)) {}
-
-  potential_ptr(std::unique_ptr<T> && p)
-    : pp_(std::make_shared<std::unique_ptr<T>>(std::move(p))) {}
-  
-  potential_ptr(potential_ptr const& r);
+  potential_ptr(std::unique_ptr<T> && p) : realized_(std::move(p)) {}
 
   potential_ptr & operator = (potential_ptr rhs) noexcept
   { swap(*this, rhs); return *this; }
 
   T * operator -> () const { return this->get(); }
 
-  T & operator * () & { return *(this->get()); }
+  T & operator * () const { return *(this->get()); }
 
   explicit operator bool () const { return bool(this->get()); }
 
   bool operator ! () const { return !bool(*this); }
 
-  bool operator != (potential_ptr const& r) const noexcept
+  bool operator != (potential_ptr const& r) const
   { return !(*this == r); }
 
-  bool operator == (potential_ptr const& r) const noexcept;
+  bool operator == (potential_ptr const& r) const;
 
   T * get() const;
 
-  void reset() { pp_.reset(); unrealized_.reset(); }
+  void reset() { realized_.reset(); link_.assign_default(); }
 
   void realize(std::unique_ptr<T> && p)
   {
@@ -74,74 +107,70 @@ public:
   bool equate_try(potential_ptr & that);
 
   friend void swap(potential_ptr & a, potential_ptr & b) noexcept
-  { swap(a.pp_, b.pp_); swap(a.unrealized_, b.unrealized_); }
+  { swap(a.realized_, b.realized_); swap(a.link_, b.link_); }
 
 private:
-  mutable std::shared_ptr<std::unique_ptr<T>> pp_;
-  mutable std::shared_ptr<potential_ptr<T>> unrealized_;
+  potential_ptr * find_root_this();
+  potential_ptr const* find_root_this() const;
+
+  mutable std::shared_ptr<T> realized_;
+  lazy_non_null_shared_ptr<potential_ptr> link_;
 };
 
 // impl
 
 template<class T>
-potential_ptr<T>::potential_ptr(potential_ptr<T> const& that)
-  : pp_(that.pp_), unrealized_(that.unrealized_)
+bool potential_ptr<T>::operator == (potential_ptr<T> const& rhs) const
 {
-  if (!pp_ && !unrealized_) {
-    unrealized_ = (that.unrealized_ = std::make_shared<potential_ptr<T>>());
-  }
-}
-
-template<class T>
-bool potential_ptr<T>::operator == (potential_ptr<T> const& that) const noexcept
-{
-  if (this == &that) return true;
-  if (unrealized_) return that == *unrealized_;
-  if (that.unrealized_) return *that.unrealized_ == *this;
-  // pp_ points to unique_ptr, thus diff pp_ must have diff unique_ptr vals
-  return pp_ && that.pp_ && pp_ == that.pp_;
+  return find_root_this() == rhs.find_root_this();
 }
 
 template<class T>
 T * potential_ptr<T>::get() const
 {
-  if (unrealized_) {
-    BOOST_ASSERT(!pp_);
-    pp_ = unrealized_->pp_;
-    if (pp_) {
-      unrealized_.reset();
-    }
+  if (!realized_ && not link_.unique_default()) {
+    realized_ = link_->find_root_this()->realized_;
   }
-  return (pp_ ? pp_->get() : nullptr);
+  return realized_.get();
 }
 
 template<class T>
 bool potential_ptr<T>::realize_try(std::unique_ptr<T> && p)
 {
-  if (!p || pp_) return false;
-  if (unrealized_) {
-    unrealized_->realize_try(std::move(p));
-    pp_ = unrealized_->pp_;
-    if (!pp_) return false;
-    unrealized_.reset();
-  } else {
-    pp_ = std::make_shared<std::unique_ptr<T>>();
-    *pp_ = std::move(p);
-  }
-  return true;
+  std::shared_ptr<T> & realized = find_root_this()->realized_;
+  if (realized) return false;
+  realized = std::move(p);
+  return bool(realized);
 }
 
 template<class T>
 bool potential_ptr<T>::equate_try(potential_ptr<T> & that)
 {
-  if (this == &that) return true;
-  if (unrealized_) return that.equate_try(*unrealized_);
-  if (that.unrealized_) return that.unrealized_->equate_try(*this);
-  if (!pp_) {
-    *this = that;
-    return true;
+  potential_ptr<T> * this_root = find_root_this();
+  potential_ptr<T> * that_root = that.find_root_this();
+  if (this_root == that_root) return true;
+  if (this_root->realized_) {
+    if (that_root->realized_) {
+      BOOST_ASSERT( that_root->realized_ != that_root->realized_ );
+      return false;
+    }
+    that_root->link_ = this_root->link_;
+  } else {
+    this_root->link_ = that_root->link_;
   }
-  return that.pp_ == pp_;
+  return true;
+}
+
+template<class T>
+potential_ptr<T> * potential_ptr<T>::find_root_this()
+{
+  return (link_.unique_default() ? this : link_->find_root_this());
+}
+
+template<class T>
+potential_ptr<T> const* potential_ptr<T>::find_root_this() const
+{
+  return (link_.unique_default() ? this : link_->find_root_this());
 }
 
 

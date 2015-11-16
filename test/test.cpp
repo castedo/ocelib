@@ -28,16 +28,19 @@ BOOST_AUTO_TEST_CASE( potential_ptr_test )
   a = b;
   BOOST_CHECK( a == b );
   BOOST_CHECK( a == c );
-  b.realize(unique_ptr<int>(new int(15)));
+  b.potential().realize(unique_ptr<int>(new int(15)));
   BOOST_CHECK( a == b );
   BOOST_CHECK( a == c );
   BOOST_CHECK_EQUAL( *a, 15 );
   BOOST_CHECK_EQUAL( *b, 15 );
   BOOST_CHECK_EQUAL( *c, 15 );
   unique_ptr<int> nova(new int(30));
-  BOOST_CHECK( not c.realize_try(move(nova)) );
+  BOOST_CHECK( not c.potential().realize_try(move(nova)) );
   BOOST_CHECK( nova );
   BOOST_CHECK_EQUAL( *c, 15 );
+
+  c.reset();
+  BOOST_CHECK( !c );
 }
 
 BOOST_AUTO_TEST_CASE( potential_ptr_equate_tests )
@@ -46,9 +49,9 @@ BOOST_AUTO_TEST_CASE( potential_ptr_equate_tests )
   potential_ptr<int> p1;
   potential_ptr<int> p2;
 
-  p1.equate(p0);
-  p2.equate(p0);
-  p0.realize(unique_ptr<int>(new int(12)));
+  equate(p1.potential(), p0.potential());
+  equate(p2.potential(), p0.potential());
+  p0.potential().realize(unique_ptr<int>(new int(12)));
   BOOST_CHECK( p1 == p0 );
   BOOST_CHECK( p2 == p1 );
 

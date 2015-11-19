@@ -179,14 +179,20 @@ bool equate_try(ptr_potential<T> & a, ptr_potential<T> & b)
   ptr_potential<T> * a_root = a.find_root_this();
   ptr_potential<T> * b_root = b.find_root_this();
   if (a_root == b_root) return true;
+  if (a_root->realized_ && b_root->realized_) {
+    BOOST_ASSERT( a_root->realized_ != b_root->realized_ );
+    return false;
+  }
+  BOOST_ASSERT( a_root->link_.unique_default() );
+  BOOST_ASSERT( b_root->link_.unique_default() );
+  lazy_non_null_shared_ptr<ptr_potential<T>> common;
+  a_root->link_ = common;
+  b_root->link_ = common;
   if (a_root->realized_) {
-    if (b_root->realized_) {
-      BOOST_ASSERT( a_root->realized_ != b_root->realized_ );
-      return false;
-    }
-    b_root->link_ = a_root->link_;
-  } else {
-    a_root->link_ = b_root->link_;
+    common->realized_ = a_root->realized_;
+  }
+  if (b_root->realized_) {
+    common->realized_ = b_root->realized_;
   }
   return true;
 }

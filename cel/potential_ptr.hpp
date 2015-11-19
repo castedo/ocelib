@@ -100,7 +100,15 @@ private:
 
   ptr_potential() noexcept {}
   ptr_potential(std::unique_ptr<T> && p) : realized_(std::move(p)) {}
-  ptr_potential(ptr_potential const& rhs) = default;
+
+  ptr_potential(ptr_potential const& rhs)
+    : link_(rhs.link_), realized_(rhs.realized_)
+  {
+    if (not link_->realized_) {
+      link_->realized_ = rhs.realized_;
+    }
+  }
+
   ptr_potential & operator = (ptr_potential const&) = delete;
 
   T * deref();
@@ -108,8 +116,8 @@ private:
   ptr_potential * find_root_this();
   ptr_potential const* find_root_this() const;
 
-  std::shared_ptr<T> realized_;
   lazy_non_null_shared_ptr<ptr_potential> link_;
+  std::shared_ptr<T> realized_;
 };
 
 template<class T>
@@ -143,14 +151,14 @@ public:
 
   T * get() const { return potential().deref(); }
 
-  void reset() { pot_.realized_.reset(); pot_.link_.assign_default(); }
+  void reset() { pot_.link_.assign_default(); pot_.realized_.reset(); }
 
   friend
   void swap(potential_ptr & a, potential_ptr & b) noexcept { a.swap_impl(b); }
 
 private:
   void swap_impl(potential_ptr & r) noexcept
-  { swap(pot_.realized_, r.pot_.realized_); swap(pot_.link_, r.pot_.link_); }
+  { swap(pot_.link_, r.pot_.link_); swap(pot_.realized_, r.pot_.realized_); }
 };
 
 // impl

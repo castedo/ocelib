@@ -25,17 +25,15 @@ find_package(Boost 1.49.0 REQUIRED COMPONENTS
 include_directories(${Boost_INCLUDE_DIRS})
 
 ### google protocol buffers
-
-find_package(Protobuf REQUIRED)
-
-include_directories(${PROTOBUF_INCLUDE_DIRS})
-
+# deprecated: 
+# find_package(Protobuf REQUIRED)
+# include_directories(${PROTOBUF_INCLUDE_DIRS})
 # precompiled headers and google protobuf generated headers files:
-include_directories(${CMAKE_BINARY_DIR})
+# include_directories(${CMAKE_BINARY_DIR})
 
 # project parts
 
-add_subdirectory(proto)
+# deprecated: add_subdirectory(proto)
 add_subdirectory(lib)
 add_subdirectory(test)
 add_subdirectory(swig)
